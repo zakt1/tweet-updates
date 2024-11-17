@@ -19,6 +19,7 @@ export function useSession() {
         queryKey: ['session'],
         queryFn: async () => {
             const {data: { session }, error} = await supabase.auth.getSession();
+            console.log('Current session:', session); // Debug line
             if(error) throw error
             return session;
         }
@@ -37,7 +38,32 @@ export function useLogin() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['session']})
+            console.log('successfully loggedin')
             navigate('/')
         }
     })
+}
+
+export function useRegister() {
+    const queryClient = useQueryClient()
+    const navigate = useNavigate()
+
+    return useMutation({
+        mutationFn: async ({email, password, birthday}: RegistrationDetails) => {
+            const {data: {user}, error: authError} = await supabase.auth.signUp({email, password})
+            
+            // const { user} = data
+            if(authError) throw authError
+            if(!user?.id) throw new Error('No user ID returned')
+            
+                
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['session']}) 
+            console.log('successfully signed up!')
+            navigate('/login')
+        }
+        
+    })
+    
 }

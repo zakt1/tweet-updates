@@ -7,12 +7,7 @@ export function HomePage(){
         <div>
 
             <h1>Tweets homepage</h1>
-
-            <nav>
-                <ul>
-                    <li><Link to="/login">Login</Link></li>
-                </ul>
-            </nav>
+                <h4>Protected homepage with all the posts, only authenticated users allowed</h4>
         </div>
 
     )

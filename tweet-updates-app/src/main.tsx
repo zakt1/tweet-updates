@@ -7,6 +7,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './App'
 import { LoginPage } from './pages/LoginPage'
 import { HomePage } from './pages/HomePage'
+import { RegisterPage } from './pages/RegisterPage'
+import { AuthGuard } from './components/AuthGuard'
+import { PostsLatest } from './pages/PostsLatest'
+import { CreatePostPage } from './pages/CreatePostPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,16 +28,36 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <HomePage />,
+        element: (
+        <AuthGuard>
+          <HomePage />
+        </AuthGuard>
+        ),
       },
       {
         path: '/login',
         element: <LoginPage />,
       },
-      // {
-      //   path: '/register',
-      //   element: <RegisterPage />,
-      // },
+      {
+        path: '/register',
+        element: <RegisterPage />
+      },
+      {
+        path: '/posts/latest',
+        element: (
+          <AuthGuard>
+            <PostsLatest />
+          </AuthGuard>
+        )
+      },
+      {
+        path: '/posts/new',
+        element: (
+          <AuthGuard>
+            <CreatePostPage />
+          </AuthGuard>
+        )
+      }
       // {
       //   path: '/posts/new',
       //   element: <CreatePostPage/>
