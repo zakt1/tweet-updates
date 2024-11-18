@@ -31,6 +31,40 @@ interface UpdatePostInput {
 
 //-----get all posts ordered latest------
 
+export function useGetAllPosts(limit=10) {
+    
+    return useQuery({
+        queryKey: ['posts-latest'],
+        queryFn: async () => {
+            const { data: allPosts, error: allPostsError } = await supabase
+            .from('updates')
+            .select(`*,
+                    updatetags(
+                    tag:tags(id, name)
+                    )
+                `)
+            .order('created_at', {ascending: false})
+            .limit(limit)
+            
+            
+            if(allPostsError) throw  allPostsError
+            return allPosts
+        }
+
+        
+    })
+}
+
+
+
+
+
+
+
+
+
+
+
 //-------------get individual user's posts by user_id-----------------
 
 export function useGetUserPosts() {

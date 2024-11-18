@@ -13,6 +13,9 @@ import { PostsLatest } from './pages/PostsLatest'
 import { CreatePostPage } from './pages/CreatePostPage'
 import { UserPostsPage } from './pages/UserPostsPage'
 import { EditPostPage } from './pages/EditPostPage'
+import { TagListPage } from './pages/TagsListPage'
+import { TagPostsPage } from './pages/TagPostsPage'
+import { LatestPostsPage } from './pages/LatestPostsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,7 +51,7 @@ const router = createBrowserRouter([
         path: '/posts/latest',
         element: (
           <AuthGuard>
-            <PostsLatest />
+            <LatestPostsPage />
           </AuthGuard>
         )
       },
@@ -75,7 +78,24 @@ const router = createBrowserRouter([
                 <EditPostPage />
             </AuthGuard>
         )
+    },
+    {
+        path: '/tags',
+        element: (
+            <AuthGuard>
+                <TagListPage />
+            </AuthGuard>
+        )
+    },
+    {
+      path: '/tags/:id',
+      element: (
+        <AuthGuard>
+          <TagPostsPage />
+        </AuthGuard>
+      )
     }
+
       // {
       //   path: '/posts/new',
       //   element: <CreatePostPage/>

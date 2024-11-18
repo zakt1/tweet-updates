@@ -12,6 +12,7 @@ export function Navigation() {
                     <li><Link to="/posts/latest">Latest Posts</Link></li>
                     <li><Link to='/posts/new'>Create Post</Link></li>
                     <li><Link to="/posts/my">My Posts</Link></li>
+                    <li><Link to="/tags">Tags</Link></li>
                 </>) 
                 : 
                 (

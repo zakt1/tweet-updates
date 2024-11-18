@@ -3,6 +3,7 @@ import { useGetUserPosts } from "../hooks/usePosts";
 
 export function UserPostsPage() {
     const { data: posts, isLoading } = useGetUserPosts();
+    console.log('posts from userPostspage:', posts )
     
     if (isLoading) return <div>Loading...</div>;
     
@@ -15,7 +16,7 @@ export function UserPostsPage() {
                         <h2>{post.title}</h2>
                         <p>{post.body}</p>
                         <div>
-                            Tags: {post.updatetags.map(t => t.tag.name).join(', ')}
+                            Tags: {post.updatetags.map(element => element.tag.name).join(', ')}
                         </div>
                         <Link to={`/posts/${post.id}/edit`}>Edit Post</Link>
                     </div>
