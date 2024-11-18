@@ -29,6 +29,34 @@ interface UpdatePostInput {
     tags: string[];
 }
 
+//-----delete post------//
+export function useDeletePost() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async(postId)=> {
+            const { data: updateTagsData, error: updateTagsError }= await supabase
+            .from('updatetags')
+            .delete()
+            .eq('update_id', postId)
+
+            if (updateTagsError) throw updateTagsError
+
+            const { data, error } = await supabase
+            .from('updates')
+            .delete()
+            .eq('id', postId)
+            
+
+            if (error) throw error
+            return data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['user-posts'])
+        }
+    })
+}
+
 //-----get all posts ordered latest------
 
 export function useGetAllPosts(limit=10) {
@@ -54,15 +82,6 @@ export function useGetAllPosts(limit=10) {
         
     })
 }
-
-
-
-
-
-
-
-
-
 
 
 //-------------get individual user's posts by user_id-----------------
