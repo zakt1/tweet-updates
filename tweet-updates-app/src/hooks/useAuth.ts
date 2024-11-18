@@ -2,6 +2,7 @@ import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/Supaba
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { AuthSession } from "@supabase/supabase-js";
 
 
 

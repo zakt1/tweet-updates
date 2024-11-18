@@ -8,11 +8,16 @@ export function Navigation() {
         <nav>
             <ul>
                 {session ? 
-                (<><li><Link to="/posts/latest">Latest Posts</Link></li></>) 
-                : 
                 (<>
-                <li><Link to="/register">Sign up</Link></li>                 
-                <li><Link to='/login'>Go to Login</Link></li></>
+                    <li><Link to="/posts/latest">Latest Posts</Link></li>
+                    <li><Link to='/posts/new'>Create Post</Link></li>
+                </>) 
+                : 
+                (
+                <>
+                    <li><Link to="/register">Sign up</Link></li>                 
+                    <li><Link to='/login'>Go to Login</Link></li>
+                </>
                 ) }
                 
             </ul>
