@@ -22,7 +22,121 @@ export interface Tag {
     id: number;
     name: string;
 }
+interface UpdatePostInput {
+    id: number;
+    title: string;
+    body: string;
+    tags: string[];
+}
 
+//-----get all posts ordered latest------
+
+//-------------get individual user's posts by user_id-----------------
+
+export function useGetUserPosts() {
+    const { data: session } = useSession();
+    
+    return useQuery({
+        queryKey: ['user-posts', session?.user?.id],
+        enabled: !!session?.user?.id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('updates')
+                .select(`
+                    id,
+                    title,
+                    body,
+                    created_at,
+                    updatetags(
+                        tag: tags(
+                            id,
+                            name
+                        )
+                    )
+                `)
+                .eq('user_id', session?.user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        }
+    });
+}
+
+export function useUpdatePost() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async ({ id, title, body, tags }: UpdatePostInput) => {
+            // Log existing tags before deletion
+            const { data: beforeTags } = await supabase
+                .from('updatetags')
+                .select('*')
+                .eq('update_id', id);
+            console.log('Tags before deletion:', beforeTags);
+
+            // Delete existing tag associations
+            const { data: deleteData, error: deleteError } = await supabase
+                .from('updatetags')
+                .delete()
+                .eq('update_id', id)
+                .select();  // Add .select() to see what was deleted
+
+            console.log('Deleted tags:', deleteData);
+            if (deleteError) {
+                console.error('Delete error:', deleteError);
+                throw deleteError;
+            }
+
+            // Update post content
+            const { error: postError } = await supabase
+                .from('updates')
+                .update({ title, body })
+                .eq('id', id);
+
+            if (postError) throw postError;
+
+            // Process new tags
+            for (const tagName of tags) {
+                const { data: existingTag } = await supabase
+                    .from('tags')
+                    .select('id')
+                    .eq('name', tagName)
+                    .maybeSingle();
+
+                let tagId: number;
+                if (existingTag?.id) {
+                    tagId = existingTag.id;
+                } else {
+                    const { data: newTag } = await supabase
+                        .from('tags')
+                        .insert({ name: tagName })
+                        .select('id')
+                        .single();
+                    tagId = newTag.id;
+                }
+
+                await supabase
+                    .from('updatetags')
+                    .insert({
+                        update_id: id,
+                        tag_id: tagId
+                    });
+            }
+
+            // Log final tags
+            const { data: afterTags } = await supabase
+                .from('updatetags')
+                .select('*')
+                .eq('update_id', id);
+            console.log('Tags after update:', afterTags);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['user-posts']);
+        }
+    });
+}
+//-------------------------------------------------------- usecreatepost-------------------------------------- //
 export function useCreatePost(){
     const {data: session} = useSession()
     const queryClient = useQueryClient()

@@ -11,6 +11,8 @@ import { RegisterPage } from './pages/RegisterPage'
 import { AuthGuard } from './components/AuthGuard'
 import { PostsLatest } from './pages/PostsLatest'
 import { CreatePostPage } from './pages/CreatePostPage'
+import { UserPostsPage } from './pages/UserPostsPage'
+import { EditPostPage } from './pages/EditPostPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,7 +59,23 @@ const router = createBrowserRouter([
             <CreatePostPage />
           </AuthGuard>
         )
-      }
+      },
+      {
+        path: '/posts/my',
+        element: (
+            <AuthGuard>
+                <UserPostsPage />
+            </AuthGuard>
+        )
+    },
+    {
+        path: '/posts/:id/edit',
+        element: (
+            <AuthGuard>
+                <EditPostPage />
+            </AuthGuard>
+        )
+    }
       // {
       //   path: '/posts/new',
       //   element: <CreatePostPage/>
