@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useSession } from "./useAuth";
-import { timeStamp } from "console";
+import { startOfDay, endOfDay } from 'date-fns';
 
 interface CreatePostInput {
     title: string;
@@ -30,6 +30,23 @@ export function useCreatePost(){
     return useMutation({
         mutationFn: async ({title, body, tags}: CreatePostInput) => {
             if(!session?.user?.id) throw new Error('Must be logged in to create post')
+            
+            //first lets check a post with same title hasn't been created on same calendar day
+            const today = new Date(); // would log 2024-11-18T15:30:45.123Z (current time)
+            const { data: existingPosts, error: checkError } = await supabase
+                .from('updates')
+                .select('title, created_at')
+                .eq('title', title)
+                .gte('created_at',  startOfDay(today).toISOString()) // gte (greater than or equal to) == created_at >=  // startofDay(today) = // Example: 2024-11-18T00:00:00.000Z (midnight) //toISOstring = // "2024-03-18T00:00:00.000Z"
+                .lte('created_at', endOfDay(today).toISOString()); //.lte('created_at', endOfDay)      → Less Than or Equal to 23:59:59.999 startofDay(today) =  2024-11-18T23:59:59.999Z (end of day), "2024-03-18T23:59:59.999Z"
+
+            if (checkError) throw checkError;
+            if (existingPosts && existingPosts.length > 0) {
+                throw new Error('A post with this title already exists today');
+            }
+
+
+            //once confirmed that there is no post with same title hasn't been created on same calendar day, now lets create our post
             const { data: post, error: postError } = await supabase
             .from('updates')
             .insert([
@@ -45,58 +62,41 @@ export function useCreatePost(){
             if(postError) throw postError
 
             //handle checking tags one at a time
-            for (const tagName of tags) {
-                try{
-                    const { data: existingTag, error: existingTagError } = await supabase
+            // Process tags
+            const tagPromises = tags.map(async (tagName) => {
+                const { data: existingTag, error: existingTagError } = await supabase
                     .from('tags')
-                    .select('*')
+                    .select('id')
                     .eq('name', tagName)
-                    .maybeSingle()
+                    .maybeSingle();
 
-                    if(existingTagError) {
-                        console.error('Error when trying to look for existing tag',existingTagError)
-                        throw existingTagError
-                    }
-                    let tagId: number
-                    if(existingTag?.id){
-                        tagId = existingTag.id
-                    }
-                    else{
-                        //no existing tag, lets create one
+                if (existingTagError) throw existingTagError;
 
-                        const { data: newTag, error: newTagError } = await supabase
+                let tagId: number;
+                if (existingTag?.id) {
+                    tagId = existingTag.id;
+                } else {
+                    const { data: newTag, error: newTagError } = await supabase
                         .from('tags')
-                        .insert({name: tagName })
-                        .select('id') // will return the data as { id: 21312 }
-                        .single() 
-                        
-                        if(newTagError){
-                            console.error('Error creating newtag', newTagError)
-                            throw newTagError
-                        }
-                        tagId = newTag.id
-                    }
+                        .insert({ name: tagName })
+                        .select('id')
+                        .single();
 
-                    //now we definitely have a 'tagId' if we got this far, need to update the posts updatetags, so lets find the update_id and link the newly created tag by adding the tagId into the updatetags at the correct row
+                    if (newTagError) throw newTagError;
+                    tagId = newTag.id;
+                }
 
-                    const { data: updateTag, error: updateTagError } = await supabase
+                return supabase
                     .from('updatetags')
                     .insert({
-                        update_id: post.id, 
+                        update_id: post.id,
                         tag_id: tagId
-                        })
+                    })
+                    .select();
+            });
 
-                    if (updateTagError) {
-                        console.error('updateTagError', updateTagError)
-                        throw updateTagError
-                    }
-
-                } catch (tagProcessingError){
-                    console.error('tag processing error', tagProcessingError)
-                    throw(tagProcessingError)
-                }
-            }
-            return post
+            await Promise.all(tagPromises);
+            return post;
 
         },
         onSuccess: () => {
